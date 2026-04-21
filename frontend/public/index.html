@@ -1,0 +1,329 @@
+import { useState } from "react";
+
+const NAV_ITEMS = [
+  {
+    label: "Dashboard",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="1" y="1" width="6" height="6" rx="1" />
+        <rect x="9" y="1" width="6" height="6" rx="1" />
+        <rect x="1" y="9" width="6" height="6" rx="1" />
+        <rect x="9" y="9" width="6" height="6" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    label: "My Expenses",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="2" y="2" width="12" height="12" rx="2" />
+        <path d="M5 8h6M5 5.5h6M5 10.5h4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Pending",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M8 5v3.5l2 1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Approved",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M5 8l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Settings",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="8" r="2.5" />
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Help",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M6 6s.5-1 2-1 2 1 2 1-1 1-2 2v1M8 11.5v.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
+
+const STATS = [
+  { label: "Total Submitted", value: "$12,485.50", sub: "All submitted expenses" },
+  { label: "Pending Approval", value: "$3,240.00", sub: "Awaiting manager review" },
+  { label: "Reimbursed", value: "$8,120.75", sub: "Processed payments" },
+];
+
+const EXPENSES = [
+  { date: "Apr 15, 2026", category: "Travel", amount: "$450.00", status: "Pending" },
+  { date: "Apr 14, 2026", category: "Meals", amount: "$125.50", status: "Approved" },
+  { date: "Apr 12, 2026", category: "Office Supplies", amount: "$89.25", status: "Approved" },
+  { date: "Apr 10, 2026", category: "Software", amount: "$299.00", status: "Pending" },
+  { date: "Apr 08, 2026", category: "Travel", amount: "$1,240.00", status: "Rejected" },
+];
+
+const STATUS_STYLES = {
+  Pending: { background: "#FAEEDA", color: "#854F0B" },
+  Approved: { background: "#EAF3DE", color: "#3B6D11" },
+  Rejected: { background: "#FCEBEB", color: "#A32D2D" },
+};
+
+function Badge({ status }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "4px 12px",
+        borderRadius: 20,
+        fontSize: 12,
+        fontWeight: 500,
+        ...STATUS_STYLES[status],
+      }}
+    >
+      {status}
+    </span>
+  );
+}
+
+function StatCard({ label, value, sub }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "0.5px solid #e5e5e5",
+        borderRadius: 12,
+        padding: "20px 22px",
+      }}
+    >
+      <p style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>{label}</p>
+      <p style={{ fontSize: 26, fontWeight: 500, color: "#111", marginBottom: 4 }}>{value}</p>
+      <p style={{ fontSize: 12, color: "#aaa" }}>{sub}</p>
+    </div>
+  );
+}
+
+function Sidebar({ activePage, onNavigate }) {
+  return (
+    <aside
+      style={{
+        width: 220,
+        background: "#fff",
+        borderRight: "0.5px solid #e5e5e5",
+        display: "flex",
+        flexDirection: "column",
+        padding: "20px 0",
+        flexShrink: 0,
+      }}
+    >
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 24px" }}>
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            background: "#1a1a1a",
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
+            <rect x="1" y="1" width="6" height="6" rx="1" />
+            <rect x="9" y="1" width="6" height="6" rx="1" />
+            <rect x="1" y="9" width="6" height="6" rx="1" />
+            <rect x="9" y="9" width="6" height="6" rx="1" />
+          </svg>
+        </div>
+        <span style={{ fontSize: 15, fontWeight: 500, color: "#111" }}>ExpenseHub</span>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 12px" }}>
+        {NAV_ITEMS.map((item) => {
+          const isActive = activePage === item.label;
+          return (
+            <button
+              key={item.label}
+              onClick={() => onNavigate(item.label)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "9px 12px",
+                borderRadius: 8,
+                border: "none",
+                cursor: "pointer",
+                fontSize: 14,
+                fontWeight: isActive ? 500 : 400,
+                color: isActive ? "#111" : "#666",
+                background: isActive ? "#f2f2f2" : "transparent",
+                textAlign: "left",
+                width: "100%",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) e.currentTarget.style.background = "#f7f7f7";
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <span style={{ opacity: 0.7, display: "flex" }}>{item.icon}</span>
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* User */}
+      <div
+        style={{
+          padding: "16px 20px 0",
+          borderTop: "0.5px solid #e5e5e5",
+          marginTop: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            background: "#dbeafe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            fontWeight: 500,
+            color: "#1d4ed8",
+            flexShrink: 0,
+          }}
+        >
+          JD
+        </div>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 500, color: "#111" }}>John Doe</p>
+          <p style={{ fontSize: 11, color: "#999" }}>john@company.com</p>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function ExpenseTable({ expenses }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "0.5px solid #e5e5e5",
+        borderRadius: 12,
+        padding: "22px 24px",
+      }}
+    >
+      <h2 style={{ fontSize: 16, fontWeight: 500, color: "#111", marginBottom: 18 }}>
+        Recent Expenses
+      </h2>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            {["Date", "Category", "Amount", "Status"].map((col) => (
+              <th
+                key={col}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#888",
+                  textAlign: "left",
+                  padding: "0 0 12px",
+                  borderBottom: "0.5px solid #e5e5e5",
+                }}
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {expenses.map((row, i) => (
+            <tr key={i} style={{ borderBottom: i < expenses.length - 1 ? "0.5px solid #e5e5e5" : "none" }}>
+              <td style={{ padding: "14px 0", fontSize: 14, color: "#333" }}>{row.date}</td>
+              <td style={{ padding: "14px 0", fontSize: 14, color: "#333" }}>{row.category}</td>
+              <td style={{ padding: "14px 0", fontSize: 14, color: "#333" }}>{row.amount}</td>
+              <td style={{ padding: "14px 0" }}>
+                <Badge status={row.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function App() {
+  const [activePage, setActivePage] = useState("Dashboard");
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: "#f9f9f9",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+
+      <main style={{ flex: 1, padding: "28px 32px", overflow: "auto" }}>
+        {/* Top bar */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: "#111" }}>Expense Dashboard</h1>
+          <button
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#1a1a1a",
+              color: "#fff",
+              border: "none",
+              padding: "10px 18px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <path d="M7 1v12M1 7h12" />
+            </svg>
+            Create New Expense
+          </button>
+        </div>
+
+        {/* Stat cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
+          {STATS.map((s) => (
+            <StatCard key={s.label} {...s} />
+          ))}
+        </div>
+
+        {/* Expense table */}
+        <ExpenseTable expenses={EXPENSES} />
+      </main>
+    </div>
+  );
+}
